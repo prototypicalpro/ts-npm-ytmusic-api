@@ -1,0 +1,11 @@
+{
+	"lock": false,
+	"tasks": {
+		"start": "deno run -A --watch=src/ --reload=https://raw.githubusercontent.com/"
+	},
+	"nodeModulesDir": false,
+	"imports": {
+		"arktype": "npm:arktype@1.0.29-alpha",
+		"$std/": "https://deno.land/std@0.212.0/"
+	}
+}

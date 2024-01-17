@@ -1,10 +1,10 @@
-import { ArtistDetailed, ArtistFull } from "../@types/types"
-import checkType from "../utils/checkType"
-import { traverseList, traverseString } from "../utils/traverse"
-import AlbumParser from "./AlbumParser"
-import PlaylistParser from "./PlaylistParser"
-import SongParser from "./SongParser"
-import VideoParser from "./VideoParser"
+import { ArtistDetailed, ArtistFull } from "../@types/types.ts"
+import checkType from "../utils/checkType.ts"
+import { traverseList, traverseString } from "../utils/traverse.ts"
+import AlbumParser from "./AlbumParser.ts"
+import PlaylistParser from "./PlaylistParser.ts"
+import SongParser from "./SongParser.ts"
+import VideoParser from "./VideoParser.ts"
 
 export default class ArtistParser {
 	public static parse(data: any, artistId: string): ArtistFull {

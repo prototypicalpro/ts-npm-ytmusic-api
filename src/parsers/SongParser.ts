@@ -1,8 +1,8 @@
-import { AlbumBasic, ArtistBasic, SongDetailed, SongFull, ThumbnailFull } from "../@types/types"
-import checkType from "../utils/checkType"
-import { isAlbum, isArtist, isDuration, isTitle } from "../utils/filters"
-import { traverseList, traverseString } from "../utils/traverse"
-import Parser from "./Parser"
+import { AlbumBasic, ArtistBasic, SongDetailed, SongFull, ThumbnailFull } from "../@types/types.ts"
+import checkType from "../utils/checkType.ts"
+import { isAlbum, isArtist, isDuration, isTitle } from "../utils/filters.ts"
+import { traverseList, traverseString } from "../utils/traverse.ts"
+import Parser from "./Parser.ts"
 
 export default class SongParser {
 	public static parse(data: any): SongFull {

@@ -1,5 +1,4 @@
-import axios, { AxiosInstance } from "axios"
-import { Cookie, CookieJar } from "tough-cookie"
+import { getCookies, Cookie, setCookie } from "$std/http/cookie.ts";
 
 import {
 	AlbumDetailed,
@@ -14,85 +13,47 @@ import {
 	SongFull,
 	VideoDetailed,
 	VideoFull,
-} from "./@types/types"
-import { FE_MUSIC_HOME } from "./constants"
-import AlbumParser from "./parsers/AlbumParser"
-import ArtistParser from "./parsers/ArtistParser"
-import Parser from "./parsers/Parser"
-import PlaylistParser from "./parsers/PlaylistParser"
-import SearchParser from "./parsers/SearchParser"
-import SongParser from "./parsers/SongParser"
-import VideoParser from "./parsers/VideoParser"
-import { traverse, traverseList, traverseString } from "./utils/traverse"
+} from "./@types/types.ts"
+import { FE_MUSIC_HOME } from "./constants.ts"
+import AlbumParser from "./parsers/AlbumParser.ts"
+import ArtistParser from "./parsers/ArtistParser.ts"
+import Parser from "./parsers/Parser.ts"
+import PlaylistParser from "./parsers/PlaylistParser.ts"
+import SearchParser from "./parsers/SearchParser.ts"
+import SongParser from "./parsers/SongParser.ts"
+import VideoParser from "./parsers/VideoParser.ts"
+import { traverse, traverseList, traverseString } from "./utils/traverse.ts"
 
 export default class YTMusic {
-	private cookiejar: CookieJar
+	private cookies: Record<string, string>;
 	private config?: Record<string, string>
-	private client: AxiosInstance
+	private baseURL: string;
+	private baseHeaders: Record<string, string>;
 
 	/**
 	 * Creates an instance of YTMusic
 	 * Make sure to call initialize()
 	 */
 	public constructor() {
-		this.cookiejar = new CookieJar()
+		this.cookies = {};
 		this.config = {}
-		this.client = axios.create({
-			baseURL: "https://music.youtube.com/",
-			headers: {
-				"User-Agent":
-					"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36",
-				"Accept-Language": "en-US,en;q=0.5",
-			},
-			withCredentials: true,
-		})
-
-		this.client.interceptors.request.use(req => {
-			if (!req.baseURL) return
-
-			const cookieString = this.cookiejar.getCookieStringSync(req.baseURL)
-			if (cookieString) {
-				if (!req.headers) {
-					req.headers = {}
-				}
-				req.headers["Cookie"] = cookieString
-			}
-
-			return req
-		})
-
-		this.client.interceptors.response.use(res => {
-			if ("set-cookie" in res.headers) {
-				if (!res.config.baseURL) return
-
-				const setCookie = res.headers["set-cookie"] as Array<string> | string
-				for (const cookieString of [setCookie].flat()) {
-					const cookie = Cookie.parse(`${cookieString}`)
-					if (!cookie) return
-
-					this.cookiejar.setCookieSync(cookie, res.config.baseURL)
-				}
-			}
-			return res
-		})
+		this.baseURL = "https://music.youtube.com/";
+		this.baseHeaders = {
+			"User-Agent":
+				"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36",
+			"Accept-Language": "en-US,en;q=0.5",
+		};
 	}
 
 	/**
 	 * Initializes the API
 	 */
-	public async initialize(options?: { cookies?: string; GL?: string; HL?: string }) {
+	public async initialize(options?: { cookies?: Record<string, string>; GL?: string; HL?: string }) {
 		const { cookies, GL, HL } = options ?? {}
 
-		if (cookies) {
-			for (const cookieString of cookies.split("; ")) {
-				const cookie = Cookie.parse(`${cookieString}`)
-				if (!cookie) return
+		this.cookies = cookies ?? {};
 
-				this.cookiejar.setCookieSync(cookie, "https://music.youtube.com/")
-			}
-		}
-
-		const html = (await this.client.get("/")).data as string
+		const html = await (await fetch(this.baseURL, { headers: this.baseHeaders, credentials: 'include' })).text()
 		const setConfigs = html.match(/ytcfg\.set\(.*\)/) || []
 
 		const configs = setConfigs
@@ -142,8 +103,8 @@ export default class YTMusic {
 		}
 
 		const headers: Record<string, any> = {
-			...this.client.defaults.headers,
-			"x-origin": this.client.defaults.baseURL,
+			...this.baseHeaders,
+			"x-origin": this.baseURL,
 			"X-Goog-Visitor-Id": this.config.VISITOR_DATA || "",
 			"X-YouTube-Client-Name": this.config.INNERTUBE_CONTEXT_CLIENT_NAME,
 			"X-YouTube-Client-Version": this.config.INNERTUBE_CLIENT_VERSION,
@@ -160,59 +121,61 @@ export default class YTMusic {
 			key: this.config.INNERTUBE_API_KEY!,
 		})
 
-		const res = await this.client.post(
-			`youtubei/${this.config.INNERTUBE_API_VERSION}/${endpoint}?${searchParams.toString()}`,
-			{
-				context: {
-					capabilities: {},
-					client: {
-						clientName: this.config.INNERTUBE_CLIENT_NAME,
-						clientVersion: this.config.INNERTUBE_CLIENT_VERSION,
-						experimentIds: [],
-						experimentsToken: "",
-						gl: this.config.GL,
-						hl: this.config.HL,
-						locationInfo: {
-							locationPermissionAuthorizationStatus:
-								"LOCATION_PERMISSION_AUTHORIZATION_STATUS_UNSUPPORTED",
-						},
-						musicAppInfo: {
-							musicActivityMasterSwitch: "MUSIC_ACTIVITY_MASTER_SWITCH_INDETERMINATE",
-							musicLocationMasterSwitch: "MUSIC_LOCATION_MASTER_SWITCH_INDETERMINATE",
-							pwaInstallabilityStatus: "PWA_INSTALLABILITY_STATUS_UNKNOWN",
-						},
-						utcOffsetMinutes: -new Date().getTimezoneOffset(),
+		const bodyStr = JSON.stringify({
+			context: {
+				capabilities: {},
+				client: {
+					clientName: this.config.INNERTUBE_CLIENT_NAME,
+					clientVersion: this.config.INNERTUBE_CLIENT_VERSION,
+					experimentIds: [],
+					experimentsToken: "",
+					gl: this.config.GL,
+					hl: this.config.HL,
+					locationInfo: {
+						locationPermissionAuthorizationStatus:
+							"LOCATION_PERMISSION_AUTHORIZATION_STATUS_UNSUPPORTED",
 					},
-					request: {
-						internalExperimentFlags: [
-							{
-								key: "force_music_enable_outertube_tastebuilder_browse",
-								value: "true",
-							},
-							{
-								key: "force_music_enable_outertube_playlist_detail_browse",
-								value: "true",
-							},
-							{
-								key: "force_music_enable_outertube_search_suggestions",
-								value: "true",
-							},
-						],
-						sessionIndex: {},
+					musicAppInfo: {
+						musicActivityMasterSwitch: "MUSIC_ACTIVITY_MASTER_SWITCH_INDETERMINATE",
+						musicLocationMasterSwitch: "MUSIC_LOCATION_MASTER_SWITCH_INDETERMINATE",
+						pwaInstallabilityStatus: "PWA_INSTALLABILITY_STATUS_UNKNOWN",
 					},
-					user: {
-						enableSafetyMode: false,
-					},
+					utcOffsetMinutes: -new Date().getTimezoneOffset(),
 				},
-				...body,
+				request: {
+					internalExperimentFlags: [
+						{
+							key: "force_music_enable_outertube_tastebuilder_browse",
+							value: "true",
+						},
+						{
+							key: "force_music_enable_outertube_playlist_detail_browse",
+							value: "true",
+						},
+						{
+							key: "force_music_enable_outertube_search_suggestions",
+							value: "true",
+						},
+					],
+					sessionIndex: {},
+				},
+				user: {
+					enableSafetyMode: false,
+				},
 			},
+			...body,
+		});
+		const res = await fetch(
+			`${this.baseURL}youtubei/${this.config.INNERTUBE_API_VERSION}/${endpoint}?${searchParams.toString()}`,
 			{
-				responseType: "json",
+				method: 'post',
+				body: bodyStr,
 				headers,
-			},
-		)
+				credentials: 'include'
+			});
 
-		return "responseContext" in res.data ? res.data : res
+		const resJson = await res.json();
+		return "responseContext" in resJson ? resJson : res
 	}
 
 	/**

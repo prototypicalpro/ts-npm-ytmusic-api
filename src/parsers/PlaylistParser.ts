@@ -1,7 +1,7 @@
-import { ArtistBasic, PlaylistDetailed, PlaylistFull, PlaylistWatch } from "../@types/types"
-import checkType from "../utils/checkType"
-import { isArtist } from "../utils/filters"
-import { traverse, traverseList, traverseString } from "../utils/traverse"
+import { ArtistBasic, PlaylistDetailed, PlaylistFull, PlaylistWatch } from "../@types/types.ts"
+import checkType from "../utils/checkType.ts"
+import { isArtist } from "../utils/filters.ts"
+import { traverse, traverseList, traverseString } from "../utils/traverse.ts"
 
 export default class PlaylistParser {
 	public static parse(data: any, playlistId: string): PlaylistFull {

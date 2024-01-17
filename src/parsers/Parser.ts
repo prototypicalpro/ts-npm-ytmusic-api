@@ -1,10 +1,10 @@
-import { HomePageContent } from "../@types/types"
-import { PageType } from "../constants"
-import { traverse, traverseList } from "../utils/traverse"
-import AlbumParser from "./AlbumParser"
-import ArtistParser from "./ArtistParser"
-import PlaylistParser from "./PlaylistParser"
-import SongParser from "./SongParser"
+import { HomePageContent } from "../@types/types.ts"
+import { PageType } from "../constants.ts"
+import { traverse, traverseList } from "../utils/traverse.ts"
+import AlbumParser from "./AlbumParser.ts"
+import ArtistParser from "./ArtistParser.ts"
+import PlaylistParser from "./PlaylistParser.ts"
+import SongParser from "./SongParser.ts"
 
 export default class Parser {
 	public static parseDuration(time: string) {

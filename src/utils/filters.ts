@@ -1,4 +1,4 @@
-import { traverseString } from "./traverse"
+import { traverseString } from "./traverse.ts"
 
 export const isTitle = (data: any) => {
 	return traverseString(data, "musicVideoType").startsWith("MUSIC_VIDEO_TYPE_")

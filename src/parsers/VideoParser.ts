@@ -1,8 +1,8 @@
-import { ArtistBasic, VideoDetailed, VideoFull } from "../@types/types"
-import checkType from "../utils/checkType"
-import { isArtist, isDuration, isTitle } from "../utils/filters"
-import { traverse, traverseList, traverseString } from "../utils/traverse"
-import Parser from "./Parser"
+import { ArtistBasic, VideoDetailed, VideoFull } from "../@types/types.ts"
+import checkType from "../utils/checkType.ts"
+import { isArtist, isDuration, isTitle } from "../utils/filters.ts"
+import { traverse, traverseList, traverseString } from "../utils/traverse.ts"
+import Parser from "./Parser.ts"
 
 export default class VideoParser {
 	public static parse(data: any): VideoFull {

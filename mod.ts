@@ -1,4 +1,4 @@
-import YTMusic from "./YTMusic"
+import YTMusic from "./src/YTMusic.ts"
 
 export type {
 	AlbumBasic,
@@ -15,6 +15,6 @@ export type {
 	ThumbnailFull,
 	VideoDetailed,
 	VideoFull,
-} from "./@types/types"
+} from "./src/@types/types.ts"
 
 export default YTMusic
