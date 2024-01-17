@@ -28,7 +28,7 @@ export default class YTMusic {
 	private cookies: Record<string, string>;
 	private config?: Record<string, string>
 	private baseURL: string;
-	private baseHeaders: Record<string, string>;
+	private baseHeaders: Headers;
 
 	/**
 	 * Creates an instance of YTMusic
@@ -38,11 +38,11 @@ export default class YTMusic {
 		this.cookies = {};
 		this.config = {}
 		this.baseURL = "https://music.youtube.com/";
-		this.baseHeaders = {
+		this.baseHeaders = new Headers({
 			"User-Agent":
 				"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36",
 			"Accept-Language": "en-US,en;q=0.5",
-		};
+		});
 	}
 
 	/**
@@ -52,8 +52,17 @@ export default class YTMusic {
 		const { cookies, GL, HL } = options ?? {}
 
 		this.cookies = cookies ?? {};
+		for (const [name, value] of Object.entries(this.cookies)) {
+			setCookie(this.baseHeaders, { name, value });
+		}
 
-		const html = await (await fetch(this.baseURL, { headers: this.baseHeaders, credentials: 'include' })).text()
+		const res = await fetch(this.baseURL, { headers: this.baseHeaders, credentials: 'include' });
+		this.cookies = { ...this.cookies, ...getCookies(res.headers) };
+		for (const [name, value] of Object.entries(this.cookies)) {
+			setCookie(this.baseHeaders, { name, value });
+		}
+
+		const html = await res.text();
 		const setConfigs = html.match(/ytcfg\.set\(.*\)/) || []
 
 		const configs = setConfigs
@@ -173,6 +182,11 @@ export default class YTMusic {
 				headers,
 				credentials: 'include'
 			});
+
+		this.cookies = { ...this.cookies, ...getCookies(res.headers) };
+		for (const [name, value] of Object.entries(this.cookies)) {
+			setCookie(this.baseHeaders, { name, value });
+		}
 
 		const resJson = await res.json();
 		return "responseContext" in resJson ? resJson : res
